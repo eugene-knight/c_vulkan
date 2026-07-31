@@ -31,6 +31,7 @@ typedef struct SY_Vulkan_Context
 {
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
+        VkPhysicalDevice physicalDevice;
 } SY_Vulkan_Context;
 
 const char* SY_VALIDATION_LAYERS[] = { "VK_LAYER_KHRONOS_validation" };
@@ -215,6 +216,40 @@ SY_Vulkan_FunctionPointersInitialize(SY_Vulkan_Context* pContext,
                 return false;
         }
         return true;
+}
+
+bool SY_Vulkan_IsDeviceSuitable(VkPhysicalDevice physicalDevice) {
+        return true;
+}
+
+SY_Result SY_Vulkan_PickPhysicalDevice(SY_Vulkan_Context *pContext)
+{
+        SY_Result result = { .domain = SY_DOMAIN_SUCCESS, .code = 0 }; 
+        u32 deviceCount = 0;
+        vkEnumeratePhysicalDevices(pContext->instance, &deviceCount, nullptr);
+        if (deviceCount == 0) {
+                fprintf(stderr, "ERROR: Failed to find GPUs with vulkan support!");
+        }
+        VkPhysicalDevice* physicalDevices = SY_TALLOCATE_(
+                SY_DEFAULT_ALLOCATOR_PTR, VkPhysicalDevice, deviceCount
+        );
+        vkEnumeratePhysicalDevices(pContext->instance, &deviceCount, &physicalDevices[0]);
+        
+        for (u32 i = 0; i < deviceCount; i++) {
+                if(SY_Vulkan_IsDeviceSuitable(physicalDevices[i])) {
+                        pContext->physicalDevice = physicalDevices[i];
+                        break;
+                }
+        }
+
+        if (pContext->physicalDevice == nullptr) {
+                fprintf(stderr, "ERROR: Failed to find suitable GPU!");
+                result.domain = SY_DOMAIN_VULKAN;
+                result.code = SY_PLACEHOLDER_RESULT;
+                return result;
+        }
+
+        return result;
 }
 
 int

@@ -10,6 +10,7 @@ typedef struct SY_Result
 } SY_Result;
 enum
 {
+        SY_PLACEHOLDER_RESULT,
         SY_ALLOCATOR_ALLOCATION_FAILURE_GENERAL,
 };
 enum
