@@ -13,4 +13,10 @@ typedef uint64_t u64;
 #define SY_ARRAY_SIZE(x) (sizeof(x)/ sizeof((x)[0]))
 #define SY_IGNORE
 
+#if defined(__GNUC__) || defined(__clang__)
+#define SY_NODISCARD __attribute((warn_unused_result))
+#else
+#define SY_NODISCARD
+#endif
+
 #endif
