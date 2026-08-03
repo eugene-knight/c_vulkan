@@ -9,7 +9,7 @@ SY_Vector_ConstCharPtr_Initialize(SY_Vector_ConstCharPtr* pObject,
         pObject->values = SY_TALLOCATE(ConstCharPtr, capacity);
         if (!pObject->values) {
                 result.domain = SY_DOMAIN_GENERAL;
-                result.code = SY_ALLOCATOR_ALLOCATION_FAILURE_GENERAL;
+                result.code = SY_RESULT_ALLOCATOR_ALLOCATION_FAILURE;
                 goto exit;
         }
         pObject->capacity = capacity;

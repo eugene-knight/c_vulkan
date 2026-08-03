@@ -10,43 +10,37 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -pedantic")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address")
 
-option(SY_BUILD_TESTS "Build tests for data structures against varying metrics" OFF)
-option(SY_BUILD_SHARED_LIB "Build shared library for using data structures in other projects" OFF)
-option(SY_BUILD_STATIC_LIB "Build static library for using data structures in other projects" OFF)
-
-if(SY_BUILD_TESTS AND (SY_BUILD_STATIC_LIB OR SY_BUILD_STATIC_LIB))
-        message(FATAL_ERROR "BUILD_TESTS cannot be set along side BUILD_SHARED_LIB or BUILD_STATIC_LIB")
-endif()
+option(SY_DS_BUILD_TESTS "Build tests for data structures against varying metrics" OFF)
+option(SY_DS_BUILD_SHARED_LIB "Build shared library for using data structures in other projects" OFF)
 
 set(SY_DS_SOURCE_FILES
-        ${CMAKE_SOURCE_DIR}/src/main.c
-        ${CMAKE_SOURCE_DIR}/src/SY_Result.c
-        ${CMAKE_SOURCE_DIR}/src/SY_Allocator.c
-        ${CMAKE_SOURCE_DIR}/src/SY_Vector.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/SY_Result.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/SY_Allocator.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/SY_Vector.c
 )
 
-if(SY_BUILD_SHARED_LIB)
-        set(SY_PROJECT_NAME ${PROJECT_NAME})
-        add_library(${PROJECT_NAME}_shared SHARED ${SY_DS_SOURCE_FILES})
-        target_include_directories(${PROJECT_NAME}_shared PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
-        )
+if(SY_DS_BUILD_SHARED_LIB)
+        add_library(${PROJECT_NAME} SHARED ${SY_DS_SOURCE_FILES})
+else()
+        add_library(${PROJECT_NAME} STATIC ${SY_DS_SOURCE_FILES})
 endif()
 
-if(SY_BUILD_STATIC_LIB)
-        add_library(${PROJECT_NAME}_static STATIC ${SY_DS_SOURCE_FILES})
-        target_include_directories(${PROJECT_NAME}_static PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
-        )
-endif()
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-if(SY_BUILD_TESTS)
-        list(APPEND SY_DS_SOURCE_FILES
-                ${CMAKE_SOURCE_DIR}/src/tests.c
-        )
-        add_executable(${PROJECT_NAME}_tests ${SY_DS_SOURCE_FILES})
-        target_include_directories(${PROJECT_NAME}_tests PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
-        )
-endif()
+target_include_directories(${PROJECT_NAME} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
 
+include(GNUInstallDirs)
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT ${PROJECT_NAME}Targets
+        FILE ${PROJECT_NAME}Targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
